@@ -1,0 +1,11 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "sqlite" url = env("DATABASE_URL") }
+
+model User { id String @id @default(cuid()) name String email String @unique passwordHash String createdAt DateTime @default(now()) events ActivityEvent[] workflows Workflow[] }
+model ActivityEvent { id String @id @default(cuid()) userId String sessionId String timestamp DateTime application String action String objectType String objectName String details String duration Int metadata String user User @relation(fields:[userId],references:[id]) }
+model Workflow { id String @id @default(cuid()) userId String name String description String trigger String status String opportunityScore Int similarityScore Int occurrences Int estimatedWeeklyMinutes Int createdAt DateTime @default(now()) updatedAt DateTime @updatedAt actions WorkflowAction[] conditions WorkflowCondition[] versions WorkflowVersion[] executions Execution[] user User @relation(fields:[userId],references:[id]) }
+model WorkflowAction { id String @id @default(cuid()) workflowId String application String action String inputs String executionMethod String order Int workflow Workflow @relation(fields:[workflowId],references:[id]) }
+model WorkflowCondition { id String @id @default(cuid()) workflowId String condition String onTrue String onFalse String workflow Workflow @relation(fields:[workflowId],references:[id]) }
+model WorkflowVersion { id String @id @default(cuid()) workflowId String version Int definition String createdAt DateTime @default(now()) workflow Workflow @relation(fields:[workflowId],references:[id]) }
+model Execution { id String @id @default(cuid()) workflowId String status String startedAt DateTime completedAt DateTime? duration Float error String? workflow Workflow @relation(fields:[workflowId],references:[id]) }
+model Integration { id String @id @default(cuid()) userId String name String type String status String metadata String }

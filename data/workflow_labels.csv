@@ -1,0 +1,6 @@
+sequence_id,workflow_name,expected_actions
+1,Customer Request,"Gmail>Download Attachment>CRM Search>CRM Update>Slack"
+2,Invoice Processing,"Gmail>Download Invoice>Google Drive>Google Sheets>Slack"
+3,Support Ticket,"Gmail>Read Complaint>Ticket System>Create Ticket>CRM>Slack"
+4,Daily Report,"Spreadsheet>Calculate Data>Generate Summary>Slack"
+5,Candidate Processing,"Gmail>Download Resume>ATS>Update Candidate>Slack"

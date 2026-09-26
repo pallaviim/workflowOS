@@ -1,0 +1,8 @@
+event_id,user_id,session_id,timestamp,application,action,object_type,object_name,details,duration
+1,U001,S001,2026-09-26T09:41:02,Gmail,open_email,email,customer_request,Opened customer request,4
+2,U001,S001,2026-09-26T09:41:18,Gmail,read_email,email,customer_request,Read customer request,20
+3,U001,S001,2026-09-26T09:42:03,Gmail,download_attachment,file,invoice.pdf,Downloaded attachment,3
+4,U001,S001,2026-09-26T09:43:12,Chrome,open_crm,application,CRM,Opened CRM,2
+5,U001,S001,2026-09-26T09:43:20,CRM,search_customer,customer,ABC Corp,Searched customer,8
+6,U001,S001,2026-09-26T09:44:21,CRM,update_customer,customer,ABC Corp,Updated customer record,12
+7,U001,S001,2026-09-26T09:45:03,Slack,send_message,message,#support,Sent notification,5

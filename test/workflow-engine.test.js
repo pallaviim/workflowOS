@@ -1,0 +1,3 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import {discover,normalize,understand} from '../server/workflow-engine.js';
+test('normalizes low-level actions',()=>assert.equal(normalize({action:'download_file'}),'download_attachment'));
+test('discovers repeated session sequences',()=>{const raw=['open_email','download_file','search_customer','update_customer'];const events=[1,2,3].flatMap(session=>raw.map((action,i)=>({userId:'U1',sessionId:'S'+session,timestamp:`2026-01-0${session}T00:0${i}:00`,application:['Gmail','Gmail','CRM','CRM'][i],action})));const candidate=discover(events)[0];assert.equal(candidate.occurrences,3);assert.equal(understand(candidate.tokens).workflowName,'Process Customer Request')});

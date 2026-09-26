@@ -1,92 +1,453 @@
-# WorkFlowOS
+````
+**Email → Files → CRM → Slack → Reports**
 
-WorkFlowOS is a local workflow-intelligence prototype that records semantic activity, discovers task-sized workflow candidates, requires explicit approval, and executes approved workflows through persisted local integrations.
+Existing automation tools usually require users to manually identify and configure these workflows.
 
-## Architecture
+WorkFlowOS aims to detect these repetitive patterns automatically and turn them into workflows.
+
+---
+
+## 💡 Solution
+
+WorkFlowOS continuously observes **semantic browser activity** through a Chrome Extension.
+
+It detects repeated sequences such as:
 
 ```text
-React + Vite → Express REST API → deterministic workflow engine → persistent local data
+Open Email
+→ Download Attachment
+→ Search Customer in CRM
+→ Update CRM
+→ Notify Team in Slack
+````
+
+The detected activity is then sent to an AI workflow-understanding layer powered by **Groq**.
+
+The AI converts the activity sequence into a structured workflow containing:
+
+- Intent
+- Trigger
+- Workflow steps
+- Failure conditions
+- Human intervention requirements
+
+The user reviews and approves the workflow before it can execute.
+
+---
+
+## 🤖 AI Integration
+
+WorkFlowOS uses **Groq's OpenAI-compatible API** for workflow understanding.
+
+### AI Model
+```
+openai/gpt-oss-20b
 ```
 
-`prisma/schema.prisma` documents the target SQLite/Prisma production data model. The runnable demo currently uses `server/data.json` so it launches without a database generation step.
+The AI receives only sanitized semantic activity such as:
+```
+open_email
+download_attachment
+search_customer
+update_customer
+send_message
+```
 
-## Run
+It does **not** receive:
 
-```powershell
-npm install
+- Passwords
+- Cookies
+- Authentication tokens
+- Payment information
+- Typed keystrokes
+- Form values
+- Raw page HTML
+- Private email/message contents
+
+AI is responsible for **understanding the workflow**.
+
+The deterministic workflow engine remains responsible for:
+
+- Detecting repetition
+- Workflow validation
+- Approval
+- Execution
+- Safety checks
+
+---
+
+## 🔄 End-to-End Flow
+```
+Chrome Activity
+      ↓
+Semantic Activity Events
+      ↓
+Repetition Detection
+      ↓
+Workflow Candidate
+      ↓
+Groq AI Understanding
+      ↓
+Structured Workflow
+      ↓
+User Review & Approval
+      ↓
+Workflow Execution
+      ↓
+Execution History & Analytics
+```
+
+---
+
+## 🎯 Primary Demo Workflow
+
+### Handle Customer Request from Email
+```
+Gmail
+  ↓
+Open Customer Email
+  ↓
+Download Attachment
+  ↓
+CRM
+  ↓
+Search Customer
+  ↓
+Update Customer Record
+  ↓
+Slack
+  ↓
+Notify Relevant Team
+```
+
+Example workflow:
+```
+Intent:
+Process Customer Request
+
+Trigger:
+New customer request received in Gmail
+
+Steps:
+1. Identify customer from email
+2. Download relevant attachment
+3. Find customer in CRM
+4. Update customer record
+5. Notify relevant team in Slack
+
+Failure Condition:
+Customer not found
+
+Human Intervention:
+Required
+```
+
+---
+
+## 🔐 Human Approval
+
+WorkFlowOS does not automatically execute newly discovered workflows.
+
+Workflow lifecycle:
+```
+Discovered
+    ↓
+Review
+    ↓
+Approve
+    ↓
+Active
+    ↓
+Run
+```
+
+Users can also reject, pause, or resume workflows.
+
+Only approved and active workflows can execute.
+
+---
+
+## ⚙️ Execution
+
+The current prototype uses local simulated integrations for:
+
+- Gmail
+- CRM
+- Slack
+- File processing
+
+A successful execution records:
+```
+Gmail → Files → CRM → Slack
+```
+
+Execution history stores:
+
+- Workflow
+- Status
+- Start/end time
+- Duration
+- Individual steps
+- Failed step
+- Human intervention requirement
+- Outcome
+
+The prototype does not claim to perform real Gmail or Slack API actions yet.
+
+---
+
+## 🧩 Architecture
+```
+┌─────────────────────────────┐
+│       React / Vite UI       │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│       Express Backend       │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│ Persistent Local Data Store │
+│       server/data.json      │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│    Workflow Engine          │
+│ Discovery + Validation      │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│     Groq AI Understanding   │
+└──────────────┬──────────────┘
+               ↓
+┌─────────────────────────────┐
+│ Approval + Execution Engine │
+└─────────────────────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| TechnologyPurpose |                              |
+| ----------------- | ---------------------------- |
+| React             | Frontend                     |
+| Vite              | Frontend tooling             |
+| Node.js           | Backend runtime              |
+| Express.js        | REST API                     |
+| Groq              | AI workflow understanding    |
+| Chrome Extension  | Browser activity observation |
+| JSON Persistence  | Local application data       |
+| JavaScript        | Application logic            |
+
+---
+
+## 🌐 Chrome Extension
+
+The Chrome Extension observes high-level browser activity.
+
+Supported semantic events include:
+```
+PAGE_OPEN
+SEARCH
+FORM_SUBMIT
+DOWNLOAD_FILE
+OPEN_EMAIL
+```
+
+The extension intentionally avoids collecting sensitive information.
+
+### Setup
+
+1. Start the WorkFlowOS application.
+```
 npm run dev
 ```
 
-Open the displayed Vite address, click **Start Demo**, then use the demo workspace sign-in action. The server starts on port 3001 and Vite proxies `/api` to it.
-
-## Chrome extension observer
-
-The optional Manifest V3 extension in `extension/` sends privacy-safe **semantic** browser events to the same local activity API used by the dashboard. It captures only page opens, searches, form submissions, likely file-download clicks, and likely email-open clicks. It does not capture typed values, passwords, payment data, cookies, authentication tokens, private message/email contents, or page HTML.
-
-1. Start WorkFlowOS with `npm run dev` (the Express API must be available at `http://localhost:3001`).
-2. In Chrome, open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-3. Select the repository's `extension/` directory.
-4. Open the WorkFlowOS Observer popup and choose **Start Observation**.
-5. Browse normally, then open WorkFlowOS → **Activity** to see the submitted semantic events.
-6. Choose **Stop Observation** in the popup to stop submissions. The setting persists in Chrome local storage.
-
-## Environment
-
-Copy `.env.example` to configure optional AI understanding. `GROQ_API_KEY` is optional. When present, the server uses Groq's OpenAI-compatible API to turn normalized semantic activity tokens into a structured workflow proposal; a timeout, API failure, or invalid response always falls back to the local deterministic interpreter.
-
-## Demo flow
-
-Launch Demo → Activity → **Run Customer Request Demo** → Discoveries → **Discover Workflows** → Review → Simulation → Approve → Run now → Analytics.
-
-The primary workflow is:
-
-```text
-Gmail → Files → CRM Search → CRM Update → Slack
+2. Open Chrome.
+3. Go to:
+```
+chrome://extensions
 ```
 
-`Run Customer Request Demo` records the semantic customer-request sequence. Running the approved workflow updates the local CRM record for ABC Technologies, persists a `#customer-support` message, and creates an execution record.
-
-## Pipeline
-
-Observe → Understand → Detect Repetition → Generate Workflow → User Approval → Automate → Learn.
-
-## Project structure
-
-```text
-src/        React application and UI
-server/     Express API, workflow engine, and persisted local data
-extension/  Chrome Manifest V3 semantic activity observer
-test/       Discovery, API, approval, routing, and execution tests
-prisma/     Future SQLite/Prisma schema reference
+4. Enable **Developer mode**.
+5. Select **Load unpacked**.
+6. Choose:
+```
+extension/
 ```
 
-## Implementation boundaries
+7. Open the extension and start observation.
 
-### Real implementation
+---
 
-- Chrome semantic browser activity ingestion
-- Express backend and `server/data.json` persistence
-- Deterministic workflow discovery and duplicate prevention
-- Optional Groq-backed workflow understanding of normalized semantic activity only, with deterministic fallback
-- Review, simulation, explicit approval, and execution gating
-- Local CRM mutation, Slack-message persistence, execution history, and analytics
+## 💻 Installation
 
-### Simulated/local integrations
+Clone the repository:
+```
+git clone https://github.com/pallaviim/workflowOS.git
+cd workflowOS
+```
 
-- Gmail request context
-- CRM and Slack adapters
-- Attachment processing
+Install dependencies:
+```
+npm install
+```
 
-The AI layer never receives browser HTML, typed values, credentials, cookies, tokens, email/message contents, or raw form data. It proposes workflow understanding only; human approval remains required before any local simulated CRM or Slack execution.
+Create your environment file:
+```
+.env
+```
 
-### Future work
+Add:
+```
+GROQ_API_KEY=your_groq_api_key
+```
 
-- Gmail OAuth and Slack API integration
-- Desktop/OS-level activity agent
-- Real browser automation
-- Accessibility/UI automation and computer-vision fallback
-- SQLite/Prisma runtime migration
+Start the application:
+```
+npm run dev
+```
 
-## Limitations
+The application runs at:
+```
+http://localhost:5173
+```
 
-The runnable prototype persists to local JSON. The included Prisma schema documents a future SQLite migration target; it is not used at runtime. External accounts and OS-level automation are not connected.
+Backend:
+```
+http://localhost:3001
+```
+
+> Never commit your `.env` file or API key.
+
+---
+
+## 🎬 Demo Flow
+
+For the hackathon demonstration:
+
+1. Start WorkFlowOS.
+2. Start Chrome activity observation.
+3. Generate the customer-request activity sequence.
+4. Open **Discoveries**.
+5. Show the AI-understood workflow.
+6. Open **Review**.
+7. Review the Gmail → Files → CRM → Slack workflow.
+8. Approve the workflow.
+9. Run the workflow.
+10. Show the simulated CRM update.
+11. Show the Slack notification.
+12. Show execution history and analytics.
+
+---
+
+## 🧪 Testing
+
+Run the test suite:
+```
+npm test
+```
+
+Also verify:
+```
+npm run lint
+npm run build
+```
+
+The project includes tests for:
+
+- Workflow discovery
+- AI workflow understanding
+- Approval states
+- Workflow execution
+- Safety controls
+- Chrome extension behavior
+- API behavior
+
+---
+
+## 🔒 Privacy & Security
+
+WorkFlowOS follows a semantic-observation approach.
+
+The Chrome Extension does not intentionally collect:
+
+- Passwords
+- Cookies
+- Authentication tokens
+- Payment information
+- Arbitrary keystrokes
+- Form values
+- Raw webpage HTML
+- Private message contents
+
+Only high-level activity events required for workflow discovery are recorded.
+
+---
+
+## ⚠️ Current Prototype Scope
+
+The current implementation is a **browser-level prototype**.
+
+### Implemented
+
+- Chrome activity observation
+- Semantic activity events
+- Persistent activity storage
+- Repetition detection
+- Workflow discovery
+- Groq AI workflow understanding
+- Workflow approval
+- Workflow execution engine
+- Local CRM simulation
+- Local Slack simulation
+- Execution history
+- Analytics
+- Safety controls
+
+### Simulated / Future Integration
+
+- Real Gmail OAuth/API
+- Real Slack API
+- Real CRM integrations
+- Desktop/OS-level activity observation
+- Real browser/app automation
+- Accessibility-based UI automation
+- Computer-vision fallback
+
+---
+
+## 🔮 Future Work
+
+- Desktop and OS-level activity agent
+- Real Gmail integration
+- Real Slack integration
+- Enterprise CRM integrations
+- Cross-application automation
+- Accessibility-based automation
+- Computer vision fallback
+- More advanced workflow learning
+- Enterprise authentication and deployment
+
+---
+
+## 🌟 Vision
+
+WorkFlowOS aims to move automation from:
+
+> **"Tell the system what to automate."**
+
+to:
+
+> **"Show the system what you repeatedly do, and let it help turn that behavior into an approved workflow."**
+
+---
+
+## 👩‍💻 Built With
+
+**React · Node.js · Express · Chrome Extensions · Groq AI**
+
+
+
+all of this shd be pasted?

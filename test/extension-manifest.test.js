@@ -1,0 +1,2 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import fs from 'node:fs';
+test('Chrome extension manifest is valid MV3 and limits permissions',()=>{const manifest=JSON.parse(fs.readFileSync(new URL('../extension/manifest.json',import.meta.url)));assert.equal(manifest.manifest_version,3);assert.deepEqual(manifest.permissions,['storage']);assert.deepEqual(manifest.host_permissions,['http://localhost:3001/*']);assert.equal(manifest.background.service_worker,'background.js')});

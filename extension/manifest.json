@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "WorkFlowOS Activity Observer",
+  "version": "1.0.0",
+  "description": "Captures privacy-safe semantic browser activity for the local WorkFlowOS demo.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:3001/*"],
+  "action": { "default_popup": "popup.html", "default_title": "WorkFlowOS Observer" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [{ "matches": ["http://*/*", "https://*/*"], "js": ["content.js"], "run_at": "document_idle" }]
+}

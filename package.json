@@ -7,13 +7,14 @@
     "server": "node server/index.js",
     "client": "vite",
     "build": "vite build",
-    "test": "node --test",
-    "lint": "node --check server/index.js && node --check server/workflow-engine.js"
+    "test": "node --test --test-concurrency=1",
+    "lint": "node --check server/index.js && node --check server/workflow-engine.js && node --check server/workflow-understanding.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "express": "^5.1.0",
     "lucide-react": "^0.468.0",
+    "openai": "^7.23.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.2",

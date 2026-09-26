@@ -1,6 +1,0 @@
-name,type,automation_method
-Gmail,email,API Integration
-Slack,communication,API Integration
-CRM,customer-data,API Integration
-Google Drive,file-storage,API Integration
-Microsoft Excel,spreadsheet,Application Integration

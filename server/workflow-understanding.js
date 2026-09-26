@@ -10,19 +10,21 @@ const proposalSchema=z.object({
   requiresHumanIntervention:z.boolean()
 });
 
+const GROQ_BASE_URL='https://api.groq.com/openai/v1';
+const GROQ_MODEL='openai/gpt-oss-20b';
 const responseFormat={type:'json_schema',name:'workflow_understanding',strict:true,schema:{type:'object',additionalProperties:false,required:['intent','trigger','steps','failureCondition','requiresHumanIntervention'],properties:{intent:{type:'string'},trigger:{type:'string'},steps:{type:'array',items:{type:'string'}},failureCondition:{type:'string'},requiresHumanIntervention:{type:'boolean'}}}};
 const fallback=tokens=>({...understand(tokens),understandingSource:'deterministic-fallback'});
 
-export async function understandWorkflow(tokens,{apiKey=process.env.OPENAI_API_KEY,client,model=process.env.OPENAI_MODEL||'gpt-4.1-mini',timeout=6000}={}){
+export async function understandWorkflow(tokens,{apiKey=process.env.GROQ_API_KEY,client,model=process.env.GROQ_MODEL||GROQ_MODEL,timeout=6000}={}){
   const local=fallback(tokens);
   if(!apiKey)return local;
   try{
-    const openai=client||new OpenAI({apiKey,timeout});
-    const response=await openai.responses.create({model,store:false,instructions:'You understand a proposed workflow from normalized semantic activity tokens. Return only the requested workflow proposal. Do not suggest execution, invoke tools, or infer sensitive activity details.',input:JSON.stringify({semanticActivity:tokens}),text:{format:responseFormat}});
+    const groq=client||new OpenAI({apiKey,baseURL:GROQ_BASE_URL,timeout});
+    const response=await groq.responses.create({model,store:false,instructions:'You are the workflow understanding component of WorkFlowOS. A deterministic activity-discovery system has already detected a repetitive sequence of semantic user actions. Infer the real-world task represented by that sequence and return only the requested structured workflow proposal. Do not invent unsupported actions, execute anything, provide code, analytics, confidence scores, or decide whether the sequence is repetitive.',input:JSON.stringify({semanticActivity:tokens}),text:{format:responseFormat}});
     const proposal=proposalSchema.parse(JSON.parse(response.output_text));
-    return {...local,provider:'openai',understandingSource:'ai',intent:proposal.intent,workflowName:proposal.intent,description:`AI-understood workflow proposal: ${proposal.intent}.`,trigger:proposal.trigger,steps:proposal.steps,failureCondition:proposal.failureCondition,requiresHumanIntervention:proposal.requiresHumanIntervention,conditions:proposal.requiresHumanIntervention?[{if:'workflow_failure_condition',action:'request_human_intervention'}]:[],explanation:'AI workflow understanding was generated from normalized semantic activity only.'};
-  }catch{
-    console.warn('[workflow-understanding] AI understanding unavailable or invalid; using deterministic fallback.');
+    return {...local,provider:'groq',understandingSource:'ai',intent:proposal.intent,workflowName:proposal.intent,description:`AI-understood workflow proposal: ${proposal.intent}.`,trigger:proposal.trigger,steps:proposal.steps,failureCondition:proposal.failureCondition,requiresHumanIntervention:proposal.requiresHumanIntervention,conditions:proposal.requiresHumanIntervention?[{if:'workflow_failure_condition',action:'request_human_intervention'}]:[],explanation:'AI workflow understanding was generated from normalized semantic activity only.'};
+  }catch(error){
+    console.warn('[workflow-understanding] Groq understanding unavailable or invalid; using deterministic fallback.',{status:error?.status||null,code:error?.code||null});
     return local;
   }
 }

@@ -32,7 +32,7 @@ The optional Manifest V3 extension in `extension/` sends privacy-safe **semantic
 
 ## Environment
 
-Copy `.env.example` to configure optional AI understanding. `OPENAI_API_KEY` is optional. When present, the server uses the official OpenAI SDK to turn normalized semantic activity tokens into a structured workflow proposal; a timeout, API failure, or invalid response always falls back to the local deterministic interpreter.
+Copy `.env.example` to configure optional AI understanding. `GROQ_API_KEY` is optional. When present, the server uses Groq's OpenAI-compatible API to turn normalized semantic activity tokens into a structured workflow proposal; a timeout, API failure, or invalid response always falls back to the local deterministic interpreter.
 
 ## Demo flow
 
@@ -67,7 +67,7 @@ prisma/     Future SQLite/Prisma schema reference
 - Chrome semantic browser activity ingestion
 - Express backend and `server/data.json` persistence
 - Deterministic workflow discovery and duplicate prevention
-- Optional OpenAI-backed workflow understanding of normalized semantic activity only, with deterministic fallback
+- Optional Groq-backed workflow understanding of normalized semantic activity only, with deterministic fallback
 - Review, simulation, explicit approval, and execution gating
 - Local CRM mutation, Slack-message persistence, execution history, and analytics
 
